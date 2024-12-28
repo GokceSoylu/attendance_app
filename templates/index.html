@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yoklama Sistemi</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+    <h1>Yoklama Sistemi</h1>
+    <p>Resim yükleyerek veya kamera ile çekim yaparak yoklama alabilirsiniz.</p>
+
+    <!-- Resim yükleme formu -->
+    <form action="/upload" method="POST" enctype="multipart/form-data">
+        <input type="file" name="image" accept="image/*" required>
+        <button type="submit">Resmi Yükle</button>
+    </form>
+
+    <!-- Yeni öğrenci ekleme linki -->
+    <a href="{{ url_for('add_student_page') }}">Yeni Öğrenci Ekle</a>
+</body>
+
+</html>

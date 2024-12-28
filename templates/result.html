@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yoklama Sonuçları</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+    <h1>Yoklama Sonuçları</h1>
+
+    <h2>Sınıfta Olanlar</h2>
+    <ul>
+        {% for student in results["present"] %}
+        <li>
+            <a href="{{ url_for('student_detail', name=student) }}">{{ student }}</a>
+        </li>
+        {% endfor %}
+    </ul>
+
+    <h2>Sınıfta Olmayanlar veya Tanınmayanlar</h2>
+    <ul>
+        {% for student in results["unknown"] %}
+        <li>{{ student }}</li>
+        {% endfor %}
+    </ul>
+
+    <a href="{{ url_for('index') }}">Ana Sayfaya Dön</a>
+</body>
+
+</html>

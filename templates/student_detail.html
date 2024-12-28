@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ student[1] }} - Detaylar</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+    <h1>{{ student[1] }} Detayları</h1>
+    <p><strong>Öğrenci Numarası:</strong> {{ student[2] }}</p>
+    <img src="{{ url_for('static', filename=student[3]) }}" alt="Öğrenci Resmi" style="width: 200px; height: auto;">
+
+    <h2>Yoklama Geçmişi</h2>
+    <ul>
+        {% for record in attendance_history %}
+        <li>{{ record[2] }} - {{ record[3] }}</li>
+        {% endfor %}
+    </ul>
+
+    <a href="{{ url_for('index') }}">Ana Sayfaya Dön</a>
+</body>
+
+</html>

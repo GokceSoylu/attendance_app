@@ -1,0 +1,5 @@
+from utils.db_utils import init_db
+
+# Veritabanı tablolarını oluştur
+init_db()
+print("Veritabanı tabloları başarıyla oluşturuldu.")

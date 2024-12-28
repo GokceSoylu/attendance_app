@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yeni Öğrenci Ekle</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+    <h1>Yeni Öğrenci Ekle</h1>
+    {% if error %}
+    <p style="color: red;">{{ error }}</p>
+    {% endif %}
+    <form action="{{ url_for('add_student_page') }}" method="POST" enctype="multipart/form-data">
+        <label for="name">Öğrenci İsmi:</label>
+        <input type="text" name="name" id="name" required>
+        <br>
+        <label for="student_number">Öğrenci Numarası:</label>
+        <input type="text" name="student_number" id="student_number" required>
+        <br>
+        <label for="image">Resim:</label>
+        <input type="file" name="image" id="image" accept="image/*" required>
+        <br>
+        <button type="submit">Ekle</button>
+    </form>
+
+    <a href="{{ url_for('index') }}">Ana Sayfaya Dön</a>
+</body>
+
+</html>
