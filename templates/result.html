@@ -1,3 +1,4 @@
+<!-- templates/result.html -->
 <!DOCTYPE html>
 <html lang="en">
 
@@ -5,7 +6,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Yoklama Sonuçları</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 
 <body>
@@ -15,19 +15,49 @@
     <ul>
         {% for student in results["present"] %}
         <li>
-            <a href="{{ url_for('student_detail', name=student) }}">{{ student }}</a>
+            <a href="{{ url_for('student_detail', student_id=student['id']) }}">{{ student['name'] }}</a>
         </li>
         {% endfor %}
     </ul>
 
-    <h2>Sınıfta Olmayanlar veya Tanınmayanlar</h2>
-    <ul>
-        {% for student in results["unknown"] %}
-        <li>{{ student }}</li>
-        {% endfor %}
-    </ul>
 
-    <a href="{{ url_for('index') }}">Ana Sayfaya Dön</a>
+    <h2>Sınıfta Olmayanlar</h2>
+    <div id="absent-list" style="display: none;">
+        <ul>
+            {% for student in results["absent"] %}
+            <li>{{ student['name'] }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    <button id="show-absent-button" onclick="toggleAbsentList()">Sınıfta Olmayanları Listele</button>
+
+    <script>
+        // Absent students list toggle
+        function toggleAbsentList() {
+            const absentList = document.getElementById("absent-list");
+            const button = document.getElementById("show-absent-button");
+
+            if (absentList.style.display === "none") {
+                absentList.style.display = "block";
+                button.innerText = "Sınıfta Olmayanları Gizle";
+            } else {
+                absentList.style.display = "none";
+                button.innerText = "Sınıfta Olmayanları Listele";
+            }
+        }
+
+        // Update attendance status
+        function updateAttendance(studentId, action) {
+            fetch(`/update-attendance`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ student_id: studentId, action: action }),
+            })
+                .then((response) => response.json())
+                .then((data) => alert(data.message))
+                .catch((error) => console.error("Hata:", error));
+        }
+    </script>
 </body>
 
 </html>
