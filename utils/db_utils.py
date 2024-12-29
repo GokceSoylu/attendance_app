@@ -1,5 +1,3 @@
-# utils/db_utils.py
-
 import sqlite3
 from datetime import datetime
 
@@ -21,7 +19,11 @@ def get_student(student_id):
     cursor.execute("SELECT * FROM students WHERE id=?", (student_id,))
     student = cursor.fetchone()
     connection.close()
-    return student
+
+    # Eğer öğrenci bulunduysa, tuple'ı bir sözlüğe çeviriyoruz
+    if student:
+        return {"id": student[0], "name": student[1], "student_number": student[2], "image_path": student[3]}
+    return None
 
 # Tüm öğrencileri getirme fonksiyonu
 def get_all_students():
@@ -30,7 +32,20 @@ def get_all_students():
     cursor.execute("SELECT * FROM students")
     students = cursor.fetchall()
     connection.close()
-    return students
+
+    # Tuple'ları sözlüğe çevir
+    return [{"id": student[0], "name": student[1], "student_number": student[2], "image_path": student[3]} for student in students]
+
+# Öğrencilerin yoklama geçmişini getirme fonksiyonu
+def get_attendance_history():
+    connection = sqlite3.connect("data/students.db")
+    cursor = connection.cursor()
+    cursor.execute("SELECT * FROM attendance")
+    history = cursor.fetchall()
+    connection.close()
+
+    # Yoklama geçmişini daha anlamlı bir formatta döndür
+    return [{"id": record[0], "student_id": record[1], "status": record[2], "timestamp": record[3]} for record in history]
 
 # Yoklama kaydını ekleme fonksiyonu
 def mark_attendance(student_id, status):
@@ -45,11 +60,3 @@ def mark_attendance(student_id, status):
     connection.commit()
     connection.close()
 
-# Öğrencilerin yoklama geçmişini getirme fonksiyonu
-def get_attendance_history():
-    connection = sqlite3.connect("data/students.db")
-    cursor = connection.cursor()
-    cursor.execute("SELECT * FROM attendance")
-    history = cursor.fetchall()
-    connection.close()
-    return history
