@@ -9,18 +9,14 @@
 </head>
 
 <body>
-    <h1>{{ student[1] }} Detayları</h1>
-    <p><strong>Öğrenci Numarası:</strong> {{ student[2] }}</p>
-    <img src="{{ url_for('static', filename=student[3]) }}" alt="Öğrenci Resmi" style="width: 200px; height: auto;">
+    <!-- templates/student_detail.html -->
+    <h1>{{ student['name'] }} Detayları</h1>
+    <p><strong>Öğrenci Numarası:</strong> {{ student['student_number'] }}</p>
+    <img src="{{ student['image_path'] }}" alt="Öğrenci Resmi">
+    <br>
+    <button onclick="updateAttendance('{{ student['id'] }}', 'mark-absent')">Yok Yaz</button>
+    <a href="/">Ana Sayfaya Dön</a>
 
-    <h2>Yoklama Geçmişi</h2>
-    <ul>
-        {% for record in attendance_history %}
-        <li>{{ record[2] }} - {{ record[3] }}</li>
-        {% endfor %}
-    </ul>
-
-    <a href="{{ url_for('index') }}">Ana Sayfaya Dön</a>
 </body>
 
 </html>
