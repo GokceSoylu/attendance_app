@@ -17,33 +17,52 @@
 
         .student-list {
             list-style-type: none;
+            /* Liste işaretlerini kaldır */
             padding: 0;
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 10px;
+            margin: 0;
         }
 
         .student-list li {
-            display: inline;
+            margin: 10px 0;
+            /* Elemanlar arası boşluk */
         }
 
         .student-button {
-            display: inline-block;
-            padding: 10px 20px;
-            margin: 5px;
+            display: block;
+            /* Tam genişlik için */
+            width: 100%;
+            max-width: 300px;
+            padding: 10px;
             font-size: 16px;
             text-decoration: none;
             color: white;
-            background-color: #007BFF;
+            background-color: #4996ea;
             border: none;
             border-radius: 5px;
+            text-align: center;
             cursor: pointer;
             transition: background-color 0.3s ease;
         }
 
         .student-button:hover {
-            background-color: #0056b3;
+            background-color: #4299f7;
+        }
+
+        .student-button.absent {
+            background-color: #dc3545;
+            /* Kırmızı arka plan */
+        }
+
+        .student-button.absent:hover {
+            background-color: #b02a37;
+            /* Kırmızı hover */
+        }
+
+        .list-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            /* Merkezde hizala */
         }
     </style>
 </head>
@@ -52,29 +71,34 @@
     <h1>Yoklama Sonuçları</h1>
 
     <h2>Sınıfta Olanlar</h2>
-    <ul class="student-list">
-        {% for student in results["present"] %}
-        <li>
-            <a class="student-button" href="{{ url_for('student_detail', student_id=student['id']) }}">
-                {{ student['name'] }}
-            </a>
-        </li>
-        {% endfor %}
-    </ul>
+    <div class="list-container">
+        <ul class="student-list">
+            {% for student in results["present"] %}
+            <li>
+                <a class="student-button" href="{{ url_for('student_detail', student_id=student['id']) }}">
+                    {{ student['name'] }}
+                </a>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
 
     <h2>Sınıfta Olmayanlar</h2>
-    <div id="absent-list" style="display: none;">
+    <div id="absent-list" class="list-container" style="display: none;">
         <ul class="student-list">
             {% for student in results["absent"] %}
             <li>
-                <span class="student-button" style="background-color: #dc3545; cursor: default;">
+                <span class="student-button absent">
                     {{ student['name'] }}
                 </span>
             </li>
             {% endfor %}
         </ul>
     </div>
-    <button id="show-absent-button" onclick="toggleAbsentList()">Sınıfta Olmayanları Listele</button>
+    <div class="list-container">
+        <button id="show-absent-button" class="student-button" style="max-width: 200px;"
+            onclick="toggleAbsentList()">Sınıfta Olmayanları Listele</button>
+    </div>
 
     <script>
         // Absent students list toggle
@@ -89,18 +113,6 @@
                 absentList.style.display = "none";
                 button.innerText = "Sınıfta Olmayanları Listele";
             }
-        }
-
-        // Update attendance status
-        function updateAttendance(studentId, action) {
-            fetch(`/update-attendance`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ student_id: studentId, action: action }),
-            })
-                .then((response) => response.json())
-                .then((data) => alert(data.message))
-                .catch((error) => console.error("Hata:", error));
         }
     </script>
 </body>
