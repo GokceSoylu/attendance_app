@@ -9,12 +9,19 @@
 </head>
 
 <body>
-    <h1>{{ student[1] }} Detayları</h1>
+    <h1>{{ student[1] }} </h1>
     <p><strong>Öğrenci Numarası:</strong> {{ student[2] }}</p>
-    <img src="{{ url_for('static', filename=student['image_path']) }}" alt="Öğrenci Resmi">
+    <img src="{{ request.host_url }}{{ student['image_path'] }}" alt="Öğrenci Resmi"
+        style="width: 210px; height: 280px; object-fit: cover; border: 1px solid #ddd;">
     <br>
     <button onclick="updateAttendance('{{ student[0] }}', 'mark-absent')">Yok Yaz</button>
-    <a href="/">Ana Sayfaya Dön</a>
+    <button onclick="goBack()">Geri</button>
+
+    <script>
+        function goBack() {
+            window.history.back();
+        }
+    </script>
 </body>
 
 </html>
