@@ -55,14 +55,26 @@ def student_detail(student_id):
     student = get_student(student_id)
     if not student:
         return "Öğrenci bulunamadı", 404
-    return render_template("student_detail.html", student=student)
+    
+    # Yoklama durumunu kontrol et
+    attendance_status = check_attendance_status(student_id)
+    if attendance_status == "absent":
+        return render_template("student_detail_absent.html", student=student)
+    else:
+        return render_template("student_detail.html", student=student)
 
-@app.route("/student/<int:student_id>")
-def student_detail_absent(student_id):
-    student = get_student(student_id)
-    if not student:
-        return "Öğrenci bulunamadı", 404
-    return render_template("student_detail_absent.html", student=student)
+def check_attendance_status(student_id):
+    """Öğrencinin yoklama durumunu kontrol eder."""
+    connection = sqlite3.connect("data/students.db")
+    cursor = connection.cursor()
+    cursor.execute("SELECT status FROM attendance WHERE student_id = ?", (student_id,))
+    result = cursor.fetchone()
+    connection.close()
+
+    if result and result[0] == "absent":
+        return "absent"
+    return "present"
+
 
 @app.route("/add-student", methods=["GET", "POST"])
 def add_student_page():
