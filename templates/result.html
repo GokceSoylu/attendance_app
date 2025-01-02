@@ -123,9 +123,10 @@
             <ul class="student-list">
                 {% for student in results["absent"] %}
                 <li>
-                    <span class="student-button absent">
+                    <a class="student-button absent"
+                        href="{{ url_for('student_detail_absent', student_id=student['id']) }}">
                         {{ student['name'] }}
-                    </span>
+                    </a>
                 </li>
                 {% endfor %}
             </ul>
