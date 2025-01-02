@@ -1,4 +1,3 @@
-<!-- templates/result.html -->
 <!DOCTYPE html>
 <html lang="en">
 
@@ -6,26 +5,72 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Yoklama Sonuçları</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        h1,
+        h2 {
+            text-align: center;
+        }
+
+        .student-list {
+            list-style-type: none;
+            padding: 0;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .student-list li {
+            display: inline;
+        }
+
+        .student-button {
+            display: inline-block;
+            padding: 10px 20px;
+            margin: 5px;
+            font-size: 16px;
+            text-decoration: none;
+            color: white;
+            background-color: #007BFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .student-button:hover {
+            background-color: #0056b3;
+        }
+    </style>
 </head>
 
 <body>
     <h1>Yoklama Sonuçları</h1>
 
     <h2>Sınıfta Olanlar</h2>
-    <ul>
+    <ul class="student-list">
         {% for student in results["present"] %}
         <li>
-            <a href="{{ url_for('student_detail', student_id=student['id']) }}">{{ student['name'] }}</a>
+            <a class="student-button" href="{{ url_for('student_detail', student_id=student['id']) }}">
+                {{ student['name'] }}
+            </a>
         </li>
         {% endfor %}
     </ul>
 
-
     <h2>Sınıfta Olmayanlar</h2>
     <div id="absent-list" style="display: none;">
-        <ul>
+        <ul class="student-list">
             {% for student in results["absent"] %}
-            <li>{{ student['name'] }}</li>
+            <li>
+                <span class="student-button" style="background-color: #dc3545; cursor: default;">
+                    {{ student['name'] }}
+                </span>
+            </li>
             {% endfor %}
         </ul>
     </div>
