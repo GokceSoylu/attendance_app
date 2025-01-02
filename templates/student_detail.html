@@ -9,14 +9,12 @@
 </head>
 
 <body>
-    <!-- templates/student_detail.html -->
-    <h1>{{ student['name'] }} Detayları</h1>
-    <p><strong>Öğrenci Numarası:</strong> {{ student['student_number'] }}</p>
-    <img src="{{ student['image_path'] }}" alt="Öğrenci Resmi">
+    <h1>{{ student[1] }} Detayları</h1>
+    <p><strong>Öğrenci Numarası:</strong> {{ student[2] }}</p>
+    <img src="{{ url_for('static', filename=student['image_path']) }}" alt="Öğrenci Resmi">
     <br>
-    <button onclick="updateAttendance('{{student[id]}}' , 'mark-absent')">Yok Yaz</button>
+    <button onclick="updateAttendance('{{ student[0] }}', 'mark-absent')">Yok Yaz</button>
     <a href="/">Ana Sayfaya Dön</a>
-
 </body>
 
 </html>
