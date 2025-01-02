@@ -8,11 +8,22 @@
     <style>
         body {
             font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f8f9fa;
+            color: #333;
+        }
+
+        header {
+            background-color: #007BFF;
+            color: white;
+            padding: 10px;
+            text-align: center;
         }
 
         h1,
         h2 {
-            text-align: center;
+            margin: 20px 15px;
         }
 
         .student-list {
@@ -24,54 +35,75 @@
 
         .student-list li {
             margin: 10px 0;
-            /* Elemanlar arası boşluk */
         }
 
         .student-button {
-            display: block;
-            /* Tam genişlik için */
-            width: 100%;
-            max-width: 300px;
-            padding: 10px;
+            display: inline-block;
+            /* Buton genişliği içeriğe bağlı */
+            padding: 10px 20px;
             font-size: 16px;
             text-decoration: none;
             color: white;
-            background-color: #4996ea;
+            background-color: #007BFF;
             border: none;
             border-radius: 5px;
-            text-align: center;
             cursor: pointer;
-            transition: background-color 0.3s ease;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
         }
 
         .student-button:hover {
-            background-color: #4299f7;
+            background-color: #0056b3;
+            transform: translateY(-3px);
+            /* Hoverda buton hafif yukarı kalkar */
         }
 
         .student-button.absent {
             background-color: #dc3545;
-            /* Kırmızı arka plan */
         }
 
         .student-button.absent:hover {
             background-color: #b02a37;
-            /* Kırmızı hover */
         }
 
         .list-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            /* Merkezde hizala */
+            padding: 0 15px;
+        }
+
+        .show-button {
+            display: block;
+            margin: 20px 0;
+            padding: 10px;
+            width: 200px;
+            text-align: center;
+            background-color: #28a745;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            border: none;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+
+        .show-button:hover {
+            background-color: #218838;
+        }
+
+        footer {
+            text-align: center;
+            margin: 20px 0;
+            color: #666;
         }
     </style>
 </head>
 
 <body>
-    <h1>Yoklama Sonuçları</h1>
+    <header>
+        <h1>Yoklama Sonuçları</h1>
+    </header>
 
-    <h2>Sınıfta Olanlar</h2>
     <div class="list-container">
+        <h2>Sınıfta Olanlar</h2>
         <ul class="student-list">
             {% for student in results["present"] %}
             <li>
@@ -81,24 +113,26 @@
             </li>
             {% endfor %}
         </ul>
+
+        <h2>Sınıfta Olmayanlar</h2>
+        <div id="absent-list" style="display: none;">
+            <ul class="student-list">
+                {% for student in results["absent"] %}
+                <li>
+                    <span class="student-button absent">
+                        {{ student['name'] }}
+                    </span>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        <button id="show-absent-button" class="show-button" onclick="toggleAbsentList()">Sınıfta Olmayanları
+            Listele</button>
     </div>
 
-    <h2>Sınıfta Olmayanlar</h2>
-    <div id="absent-list" class="list-container" style="display: none;">
-        <ul class="student-list">
-            {% for student in results["absent"] %}
-            <li>
-                <span class="student-button absent">
-                    {{ student['name'] }}
-                </span>
-            </li>
-            {% endfor %}
-        </ul>
-    </div>
-    <div class="list-container">
-        <button id="show-absent-button" class="student-button" style="max-width: 200px;"
-            onclick="toggleAbsentList()">Sınıfta Olmayanları Listele</button>
-    </div>
+    <footer>
+        <p>&copy; 2025 Yoklama Sistemi</p>
+    </footer>
 
     <script>
         // Absent students list toggle
