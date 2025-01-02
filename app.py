@@ -40,14 +40,22 @@ def get_student(student_id):
 
 @app.route("/update-attendance/<int:student_id>/<action>", methods=["POST"])
 def update_attendance(student_id, action):
-    if action == "mark-absent":
-        mark_attendance(student_id, present=False)  # Yok olarak işaretle
-    elif action == "mark-present":
-        mark_attendance(student_id, present=True)  # Var olarak işaretle
-    else:
-        return jsonify({"status": "error", "message": "Geçersiz işlem."}), 400
+    try:
+        if action == "mark-absent":
+            mark_attendance(student_id, status="absent")
+        elif action == "mark-present":
+            mark_attendance(student_id, status="present")
+        else:
+            return jsonify({"status": "error", "message": "Geçersiz işlem."}), 400
 
-    return jsonify({"status": "success", "message": "Durum güncellendi."})
+        # Güncel durumu döndür
+        updated_status = "absent" if action == "mark-absent" else "present"
+        return jsonify({"status": "success", "message": "Durum güncellendi.", "updated_status": updated_status})
+
+    except Exception as e:
+        print(f"Veritabanı hatası: {e}")
+        return jsonify({"status": "error", "message": "Bir hata oluştu."}), 500
+
 
 
 @app.route("/student/<int:student_id>")

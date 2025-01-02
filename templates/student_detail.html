@@ -16,12 +16,7 @@
     <br>
     <button onclick="updateAttendance('{{ student[0] }}', 'mark-absent')">Yok Yaz</button>
     <button onclick="goBack()">Geri</button>
-
     <script>
-        function goBack() {
-            window.history.back();
-        }
-
         function updateAttendance(studentId, action) {
             fetch(`/update-attendance/${studentId}/${action}`, {
                 method: "POST",
@@ -29,8 +24,19 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.status === "success") {
+                        // Yoklama durumu başarıyla güncellendi
                         alert("Yoklama durumu güncellendi.");
+
+                        // Durumu değiştiren butonu güncelle
+                        const statusElement = document.getElementById("attendance-status");
+                        if (statusElement) {
+                            statusElement.textContent = data.updated_status === "absent" ? "Yok" : "Var";
+                        }
+
+                        // Sayfayı yenileyerek güncel veriyi al
+                        window.location.reload();
                     } else {
+                        // Hata durumunda sadece mesajı göster
                         alert("Hata: " + data.message);
                     }
                 })
@@ -39,7 +45,13 @@
                     alert("Sunucuya bağlanırken bir hata oluştu.");
                 });
         }
+
+        function goBack() {
+            window.history.back();  // Geri gitmek için tarayıcı geçmişini kullan
+        }
     </script>
+
+
 </body>
 
 </html>
