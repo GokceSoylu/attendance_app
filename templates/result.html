@@ -14,16 +14,20 @@
             color: #333;
         }
 
-        header {
-            background-color: #007BFF;
-            color: white;
-            padding: 10px;
-            text-align: center;
-        }
-
         h1,
         h2 {
             margin: 20px 15px;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 28px;
+            color: #333;
+        }
+
+        h2 {
+            font-size: 22px;
+            margin-top: 30px;
         }
 
         .student-list {
@@ -38,16 +42,21 @@
         }
 
         .student-button {
-            display: inline-block;
-            /* Buton genişliği içeriğe bağlı */
-            padding: 10px 20px;
+            display: block;
+            /* Buton genişliği aynı olacak */
+            width: 300px;
+            /* Tüm butonlar aynı genişlikte */
+            padding: 10px;
             font-size: 16px;
+            text-align: center;
             text-decoration: none;
             color: white;
             background-color: #007BFF;
             border: none;
             border-radius: 5px;
             cursor: pointer;
+            margin: 0 auto;
+            /* Ortalıyor */
             transition: background-color 0.3s ease, transform 0.2s ease;
             box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
         }
@@ -55,7 +64,6 @@
         .student-button:hover {
             background-color: #0056b3;
             transform: translateY(-3px);
-            /* Hoverda buton hafif yukarı kalkar */
         }
 
         .student-button.absent {
@@ -72,7 +80,7 @@
 
         .show-button {
             display: block;
-            margin: 20px 0;
+            margin: 20px auto;
             padding: 10px;
             width: 200px;
             text-align: center;
@@ -91,16 +99,15 @@
 
         footer {
             text-align: center;
-            margin: 20px 0;
-            color: #666;
+            margin: 30px 0;
+            font-size: 14px;
+            color: #555;
         }
     </style>
 </head>
 
 <body>
-    <header>
-        <h1>Yoklama Sonuçları</h1>
-    </header>
+    <h1>Yoklama Sonuçları</h1>
 
     <div class="list-container">
         <h2>Sınıfta Olanlar</h2>
@@ -131,7 +138,7 @@
     </div>
 
     <footer>
-        <p>&copy; 2025 Yoklama Sistemi</p>
+        <p>&copy; 2025 Gökçe SOYLU Yoklama Sistemi</p>
     </footer>
 
     <script>
