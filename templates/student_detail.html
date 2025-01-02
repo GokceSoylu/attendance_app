@@ -21,6 +21,24 @@
         function goBack() {
             window.history.back();
         }
+
+        function updateAttendance(studentId, action) {
+            fetch(`/update-attendance/${studentId}/${action}`, {
+                method: "POST",
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === "success") {
+                        alert("Yoklama durumu güncellendi.");
+                    } else {
+                        alert("Hata: " + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error("Hata:", error);
+                    alert("Sunucuya bağlanırken bir hata oluştu.");
+                });
+        }
     </script>
 </body>
 
