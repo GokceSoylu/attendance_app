@@ -38,6 +38,17 @@ def get_student(student_id):
     connection.close()
     return student
 
+@app.route("/update-attendance/<int:student_id>/<action>", methods=["POST"])
+def update_attendance(student_id, action):
+    if action == "mark-absent":
+        mark_attendance(student_id, present=False)  # Yok olarak işaretle
+    elif action == "mark-present":
+        mark_attendance(student_id, present=True)  # Var olarak işaretle
+    else:
+        return jsonify({"status": "error", "message": "Geçersiz işlem."}), 400
+
+    return jsonify({"status": "success", "message": "Durum güncellendi."})
+
 
 @app.route("/student/<int:student_id>")
 def student_detail(student_id):
@@ -46,6 +57,12 @@ def student_detail(student_id):
         return "Öğrenci bulunamadı", 404
     return render_template("student_detail.html", student=student)
 
+@app.route("/student/<int:student_id>")
+def student_detail_absent(student_id):
+    student = get_student(student_id)
+    if not student:
+        return "Öğrenci bulunamadı", 404
+    return render_template("student_detail_absent.html", student=student)
 
 @app.route("/add-student", methods=["GET", "POST"])
 def add_student_page():
