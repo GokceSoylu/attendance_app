@@ -2,7 +2,6 @@ import sqlite3
 import cv2
 import face_recognition
 from flask import Flask, render_template, request, redirect, jsonify, url_for
-from utils.face_recognition import process_image, load_known_faces_and_names
 from utils.db_utils import get_all_students, get_student, add_student, mark_attendance, get_attendance_history
 import os
 from datetime import datetime
@@ -21,7 +20,7 @@ def index():
 def upload_image():
     if "image" in request.files:
         file = request.files["image"]
-        file_path = os.path.join("static/images/uploads", file.filename)
+        file_path = os.path.join(UPLOAD_FOLDER, file.filename)
         file.save(file_path)
 
         # Resmi işleyip sonuçları al
@@ -30,10 +29,18 @@ def upload_image():
 
     return redirect(url_for("index"))
 
+def get_student(student_id):
+    connection = sqlite3.connect("data/students.db")
+    connection.row_factory = sqlite3.Row  # Sözlük benzeri sonuç döndür
+    cursor = connection.cursor()
+    cursor.execute("SELECT * FROM students WHERE id=?", (student_id,))
+    student = cursor.fetchone()  # Artık sözlük gibi erişilebilir
+    connection.close()
+    return student
+
 
 @app.route("/student/<int:student_id>")
 def student_detail(student_id):
-    from utils.db_utils import get_student
     student = get_student(student_id)
     if not student:
         return "Öğrenci bulunamadı", 404
@@ -53,10 +60,19 @@ def add_student_page():
         file_path = os.path.join(KNOWN_FACES_DIR, f"{name}.jpg")
         file.save(file_path)
 
-        if add_student(name, student_number, file_path):
-            return redirect(url_for("index"))
-        return render_template("add_student.html", error="Öğrenci eklenirken hata oluştu.")
+        add_student(name, student_number, file_path)
+        return redirect(url_for("index"))
     return render_template("add_student.html")
+
+def get_all_students():
+    connection = sqlite3.connect("data/students.db")
+    connection.row_factory = sqlite3.Row  # Sözlük benzeri sonuç döndür
+    cursor = connection.cursor()
+    cursor.execute("SELECT * FROM students")
+    students = cursor.fetchall()
+    connection.close()
+    return students
+
 
 def process_image(image_path):
     known_encodings, known_students = load_known_faces_and_names()
@@ -84,18 +100,22 @@ def process_image(image_path):
     results["absent"] = [student for student in all_students if student["id"] not in present_ids]
 
     return results
+
 def load_known_faces_and_names():
     connection = sqlite3.connect("data/students.db")
+    connection.row_factory = sqlite3.Row  # Sözlük benzeri sonuç döndür
     cursor = connection.cursor()
     cursor.execute("SELECT id, name, image_path FROM students")
-    students = cursor.fetchall()
+    students = cursor.fetchall()  # Artık sözlük gibi erişilebilir
     connection.close()
 
     known_encodings = []
     known_students = []
 
     for student in students:
-        student_id, name, image_path = student
+        student_id = student['id']
+        name = student['name']
+        image_path = student['image_path']
         image = face_recognition.load_image_file(image_path)
         encoding = face_recognition.face_encodings(image)
         if encoding:
