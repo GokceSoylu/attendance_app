@@ -29,6 +29,17 @@ def upload_image():
 
     return redirect(url_for("index"))
 
+@app.route("/result", methods=["GET"])
+def show_result():
+    # Örneğin, sonuçları bir oturumda (session) saklayabilirsiniz
+    from flask import session
+    results = session.get("results", None)
+
+    if results:
+        return render_template("result.html", results=results)
+    else:
+        return redirect(url_for("index"))
+
 
 def get_student(student_id):
     connection = sqlite3.connect("data/students.db")
