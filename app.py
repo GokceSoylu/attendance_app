@@ -5,8 +5,11 @@ from flask import Flask, render_template, request, redirect, jsonify, url_for
 from utils.db_utils import get_all_students, get_student, add_student, mark_attendance, get_attendance_history
 import os
 from datetime import datetime
+from flask import session
 
 app = Flask(__name__)
+app.secret_key = "bu-cok-gizli-bir-anahtardir" #ernflskjbnfrlkjsef çok komik
+
 
 UPLOAD_FOLDER = "static/images/uploads"
 KNOWN_FACES_DIR = "static/images/known_faces"
@@ -53,9 +56,10 @@ def get_student(student_id):
     connection.row_factory = sqlite3.Row  # Sözlük benzeri sonuç döndür
     cursor = connection.cursor()
     cursor.execute("SELECT * FROM students WHERE id=?", (student_id,))
-    student = cursor.fetchone()  # Artık sözlük gibi erişilebilir
+    row = cursor.fetchone()  # Row nesnesi
     connection.close()
-    return student
+    return dict(row) if row else None  # Row'u sözlüğe çevir
+
 
 @app.route("/update-attendance/<int:student_id>/<action>", methods=["POST"])
 def update_attendance(student_id, action):
@@ -81,15 +85,37 @@ def update_attendance(student_id, action):
 def student_detail(student_id):
     student = get_student(student_id)
     if not student:
-        return "Öğrenci bulunamadı", 404
+        return jsonify({"status": "error", "message": "Öğrenci bulunamadı"}), 404
+
+    # HTML Şablonuna JSON verisi ile birlikte gönder
     return render_template("student_detail.html", student=student)
+
+@app.route("/student/<int:student_id>/json")
+def student_detail_json(student_id):
+    student = get_student(student_id)
+    if not student:
+        return jsonify({"status": "error", "message": "Öğrenci bulunamadı"}), 404
+
+    return jsonify({"status": "success", "student": student})
+
 
 @app.route("/student/absent/<int:student_id>")
 def student_detail_absent(student_id):
     student = get_student(student_id)
     if not student:
-        return "Öğrenci bulunamadı", 404
+        return jsonify({"status": "error", "message": "Öğrenci bulunamadı"}), 404
+
+    # HTML Şablonuna öğrenci verisini gönder
     return render_template("student_detail_absent.html", student=student)
+
+@app.route("/student/absent/<int:student_id>/json")
+def student_detail_absent_json(student_id):
+    student = get_student(student_id)
+    if not student:
+        return jsonify({"status": "error", "message": "Öğrenci bulunamadı"}), 404
+
+    return jsonify({"status": "success", "student": student})
+
 
 
 
