@@ -8,7 +8,11 @@ from datetime import datetime
 from flask import session
 import json
 
+from flask import Flask, request
+from flask_cors import CORS
+
 app = Flask(__name__)
+CORS(app)
 app.secret_key = "bu-cok-gizli-bir-anahtardir" #ernflskjbnfrlkjsef çok komik
 
 
@@ -82,22 +86,31 @@ def get_student(student_id):
 
     return dict(row) if row else None
 
-@app.route("/update-attendance/<int:student_id>/<action>", methods=["POST"])
+@app.route('/update-attendance/<int:student_id>/<action>', methods=['POST'])
 def update_attendance(student_id, action):
-    try:
-        print(f"Action: {action}, Student ID: {student_id}")  # Loglama
-        if action == "mark-absent":
-            mark_attendance(student_id, status="absent")
-        elif action == "mark-present":
-            mark_attendance(student_id, status="present")
-        else:
-            return jsonify({"status": "error", "message": "Geçersiz işlem."}), 400
+    connection = sqlite3.connect("data/attendance.db")  # `attendance` tablosu doğru dosyada olmalı
+    cursor = connection.cursor()
+    
+    if action == "mark-present":
+        new_status = "present"
+    elif action == "mark-absent":
+        new_status = "absent"
+    else:
+        return jsonify({"status": "error", "message": "Geçersiz işlem"}), 400
+    
+    cursor.execute(
+        """
+        UPDATE attendance
+        SET status = ?
+        WHERE student_id = ?
+        """,
+        (new_status, student_id)
+    )
+    connection.commit()
+    connection.close()
+    return jsonify({"status": "success", "updated_status": new_status})
 
-        updated_status = "absent" if action == "mark-absent" else "present"
-        return jsonify({"status": "success", "message": "Durum güncellendi.", "updated_status": updated_status})
-    except Exception as e:
-        print(f"Veritabanı hatası: {e}")
-        return jsonify({"status": "error", "message": f"Bir hata oluştu: {e}"}), 500
+
 
 
 
