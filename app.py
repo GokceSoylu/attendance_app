@@ -16,6 +16,8 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 def index():
     return render_template("index.html")
 
+from flask import session
+
 @app.route("/upload", methods=["POST"])
 def upload_image():
     if "image" in request.files:
@@ -25,9 +27,14 @@ def upload_image():
 
         # Resmi işleyip sonuçları al
         results = process_image(file_path)
+
+        # Sonuçları oturuma kaydet
+        session["results"] = results
+
         return render_template("result.html", results=results)  # Şablona sonuçları gönder
 
     return redirect(url_for("index"))
+
 
 @app.route("/result", methods=["GET"])
 def show_result():

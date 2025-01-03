@@ -48,7 +48,7 @@
         }
 
         function goBack() {
-            window.history.back();  // Geri gitmek için tarayıcı geçmişini kullan
+            window.location.href = "{{ url_for('show_result') }}";
         }
     </script>
 
