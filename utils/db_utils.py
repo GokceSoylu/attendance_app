@@ -74,16 +74,19 @@ def update_student_image(student_id, image_path):
     connection.close()
 
 
-# Yoklama kaydını ekleme fonksiyonu
 def mark_attendance(student_id, status):
-    connection = sqlite3.connect("data/students.db")
-    cursor = connection.cursor()
-    
-    cursor.execute('''
-        INSERT INTO attendance (student_id, status, timestamp)
-        VALUES (?, ?, ?)
-    ''', (student_id, status, datetime.now()))
-    
-    connection.commit()
-    connection.close()
+    try:
+        connection = sqlite3.connect("data/students.db")
+        cursor = connection.cursor()
+        cursor.execute('''
+            INSERT INTO attendance (student_id, status, timestamp)
+            VALUES (?, ?, ?)
+        ''', (student_id, status, datetime.now()))
+        
+        connection.commit()  # Değişiklikleri kaydet
+        connection.close()
+        print(f"Yoklama kaydı başarıyla eklendi: Öğrenci ID: {student_id}, Durum: {status}")
+    except Exception as e:
+        print(f"Yoklama kaydı eklerken hata oluştu: {e}")
+
 

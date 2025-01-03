@@ -61,19 +61,16 @@ def show_result():
     return render_template("result.html", results=results)
 
 
-
-def show_result(query, params=None):
+def show_result():
     connection = sqlite3.connect("data/students.db")
-    connection.row_factory = sqlite3.Row  # Sözlük benzeri sonuç döndür
+    connection.row_factory = sqlite3.Row
     cursor = connection.cursor()
-    cursor.execute(query, params or [])
-    
+    cursor.execute("SELECT * FROM students")
     rows = cursor.fetchall()
     connection.close()
 
-    # Row nesnelerini dictionary'ye dönüştürme
-    result = [dict(row) for row in rows]
-    return result
+    return [dict(row) for row in rows]
+
 
 def get_student(student_id):
     connection = sqlite3.connect("data/students.db")
@@ -88,6 +85,7 @@ def get_student(student_id):
 @app.route("/update-attendance/<int:student_id>/<action>", methods=["POST"])
 def update_attendance(student_id, action):
     try:
+        print(f"Action: {action}, Student ID: {student_id}")  # Loglama
         if action == "mark-absent":
             mark_attendance(student_id, status="absent")
         elif action == "mark-present":
@@ -95,13 +93,12 @@ def update_attendance(student_id, action):
         else:
             return jsonify({"status": "error", "message": "Geçersiz işlem."}), 400
 
-        # Güncel durumu döndür
         updated_status = "absent" if action == "mark-absent" else "present"
         return jsonify({"status": "success", "message": "Durum güncellendi.", "updated_status": updated_status})
-
     except Exception as e:
         print(f"Veritabanı hatası: {e}")
-        return jsonify({"status": "error", "message": "Bir hata oluştu."}), 500
+        return jsonify({"status": "error", "message": f"Bir hata oluştu: {e}"}), 500
+
 
 
 

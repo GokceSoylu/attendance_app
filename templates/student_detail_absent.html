@@ -25,19 +25,9 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.status === "success") {
-                        // Yoklama durumu başarıyla güncellendi
-                        alert("Yoklama durumu güncellendi.");
-
-                        // Durumu değiştiren butonu güncelle
-                        const statusElement = document.getElementById("attendance-status");
-                        if (statusElement) {
-                            statusElement.textContent = data.updated_status === "absent" ? "Yok" : "Var";
-                        }
-
-                        // Sayfayı yenileyerek güncel veriyi al
-                        window.location.reload();
+                        alert("Yoklama durumu başarıyla güncellendi: " + data.updated_status);
+                        window.location.reload(); // Sayfayı yenileyerek durumu güncelle
                     } else {
-                        // Hata durumunda sadece mesajı göster
                         alert("Hata: " + data.message);
                     }
                 })
@@ -46,6 +36,7 @@
                     alert("Sunucuya bağlanırken bir hata oluştu.");
                 });
         }
+
 
         function goBack() {
             window.location.href = "{{ url_for('show_result') }}";
