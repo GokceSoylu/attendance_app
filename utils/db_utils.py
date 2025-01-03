@@ -23,6 +23,7 @@ def add_student(name, student_number, image_path):
 # Öğrenci bilgilerini getirme fonksiyonu
 def get_student(student_id):
     connection = sqlite3.connect("data/students.db")
+    connection.row_factory = sqlite3.Row  # Row nesnelerini sözlük gibi almak için
     cursor = connection.cursor()
     cursor.execute("SELECT * FROM students WHERE id=?", (student_id,))
     student = cursor.fetchone()
@@ -30,19 +31,21 @@ def get_student(student_id):
 
     # Eğer öğrenci bulunduysa, tuple'ı bir sözlüğe çeviriyoruz
     if student:
-        return {"id": student[0], "name": student[1], "student_number": student[2], "image_path": student[3]}
+        return dict(student)  # Row nesnesini dict'e dönüştürüyoruz
     return None
 
 # Tüm öğrencileri getirme fonksiyonu
 def get_all_students():
     connection = sqlite3.connect("data/students.db")
+    connection.row_factory = sqlite3.Row  # Row nesnelerini sözlük gibi almak için
     cursor = connection.cursor()
     cursor.execute("SELECT * FROM students")
     students = cursor.fetchall()
     connection.close()
 
-    # Tuple'ları sözlüğe çevir
-    return [{"id": student[0], "name": student[1], "student_number": student[2], "image_path": student[3]} for student in students]
+    # Row nesnelerini dict'e dönüştürme
+    return [dict(student) for student in students]
+
 
 # Öğrencilerin yoklama geçmişini getirme fonksiyonu
 def get_attendance_history():

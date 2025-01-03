@@ -6,6 +6,7 @@ from utils.db_utils import get_all_students, get_student, add_student, mark_atte
 import os
 from datetime import datetime
 from flask import session
+import json
 
 app = Flask(__name__)
 app.secret_key = "bu-cok-gizli-bir-anahtardir" #ernflskjbnfrlkjsef çok komik
@@ -21,6 +22,16 @@ def index():
 
 from flask import session
 
+import json
+import sqlite3
+
+# JSON dönüştürme için özel bir fonksiyon
+def custom_json_converter(obj):
+    if isinstance(obj, sqlite3.Row):
+        return dict(obj)  # Row nesnesini dict'e dönüştür
+    # Diğer özel nesneler burada ele alınabilir
+    raise TypeError("Type not serializable")
+
 @app.route("/upload", methods=["POST"])
 def upload_image():
     if "image" in request.files:
@@ -31,35 +42,42 @@ def upload_image():
         # Resmi işleyip sonuçları al
         results = process_image(file_path)
 
-        # Sonuçları oturuma kaydet
-        session["results"] = results
+        # 'results' içindeki nesneleri JSON formatına dönüştür
+        session["results"] = json.dumps(results, default=custom_json_converter)
 
         return render_template("result.html", results=results)  # Şablona sonuçları gönder
 
     return redirect(url_for("index"))
 
 
-@app.route("/result", methods=["GET"])
+@app.route('/show_result')
 def show_result():
-    # Örneğin, sonuçları bir oturumda (session) saklayabilirsiniz
-    from flask import session
-    results = session.get("results", None)
+    # Sonuçları işleyip görüntüleme
+    return render_template("result.html", results=session.get("results"))
 
-    if results:
-        return render_template("result.html", results=results)
-    else:
-        return redirect(url_for("index"))
 
+def show_result(query, params=None):
+    connection = sqlite3.connect("data/students.db")
+    connection.row_factory = sqlite3.Row  # Sözlük benzeri sonuç döndür
+    cursor = connection.cursor()
+    cursor.execute(query, params or [])
+    
+    rows = cursor.fetchall()
+    connection.close()
+
+    # Row nesnelerini dictionary'ye dönüştürme
+    result = [dict(row) for row in rows]
+    return result
 
 def get_student(student_id):
     connection = sqlite3.connect("data/students.db")
     connection.row_factory = sqlite3.Row  # Sözlük benzeri sonuç döndür
     cursor = connection.cursor()
     cursor.execute("SELECT * FROM students WHERE id=?", (student_id,))
-    row = cursor.fetchone()  # Row nesnesi
+    row = cursor.fetchone()
     connection.close()
-    return dict(row) if row else None  # Row'u sözlüğe çevir
 
+    return dict(row) if row else None
 
 @app.route("/update-attendance/<int:student_id>/<action>", methods=["POST"])
 def update_attendance(student_id, action):
@@ -115,8 +133,6 @@ def student_detail_absent_json(student_id):
         return jsonify({"status": "error", "message": "Öğrenci bulunamadı"}), 404
 
     return jsonify({"status": "success", "student": student})
-
-
 
 
 def check_attendance_status(student_id):
@@ -191,7 +207,14 @@ def process_image(image_path):
             results["absent"].append(student)
             mark_attendance(student["id"], status="absent")
 
+    # Önceki `results` dictionary'sini session'a kaydet
+    session["results"] = {
+        "present": [dict(row) for row in results["present"]],
+        "absent": [dict(row) for row in results["absent"]]
+    }
+
     return results
+
 
 
 def load_known_faces_and_names():
