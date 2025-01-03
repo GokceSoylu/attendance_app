@@ -45,15 +45,21 @@ def upload_image():
         # 'results' içindeki nesneleri JSON formatına dönüştür
         session["results"] = json.dumps(results, default=custom_json_converter)
 
-        return render_template("result.html", results=results)  # Şablona sonuçları gönder
+        # Yönlendirme ile gösterim
+        return redirect(url_for("show_result"))
 
     return redirect(url_for("index"))
 
 
+
 @app.route('/show_result')
 def show_result():
-    # Sonuçları işleyip görüntüleme
-    return render_template("result.html", results=session.get("results"))
+    results = session.get("results")
+    if results:
+        # JSON verisini tekrar bir python veri yapısına dönüştürme
+        results = json.loads(results)
+    return render_template("result.html", results=results)
+
 
 
 def show_result(query, params=None):
