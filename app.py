@@ -133,13 +133,21 @@ def process_image(image_path):
             present_ids.append(known_students[matched_idx]['id'])
             results["present"].append(known_students[matched_idx])
 
+            # Yoklama tablosuna "present" durumu ekle
+            mark_attendance(known_students[matched_idx]['id'], status="present")
+
     # Veritabanındaki tüm öğrencileri alın
     all_students = get_all_students()
 
-    # Sınıfta olmayanları belirle
-    results["absent"] = [student for student in all_students if student["id"] not in present_ids]
+    # Sınıfta olmayanları belirle ve yoklama tablosuna "absent" durumu ekle
+    results["absent"] = []
+    for student in all_students:
+        if student["id"] not in present_ids:
+            results["absent"].append(student)
+            mark_attendance(student["id"], status="absent")
 
     return results
+
 
 def load_known_faces_and_names():
     connection = sqlite3.connect("data/students.db")
