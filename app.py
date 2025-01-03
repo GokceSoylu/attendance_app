@@ -29,6 +29,7 @@ def upload_image():
 
     return redirect(url_for("index"))
 
+
 def get_student(student_id):
     connection = sqlite3.connect("data/students.db")
     connection.row_factory = sqlite3.Row  # Sözlük benzeri sonuç döndür

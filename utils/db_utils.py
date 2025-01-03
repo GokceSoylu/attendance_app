@@ -9,8 +9,16 @@ def add_student(name, student_number, image_path):
         INSERT INTO students (name, student_number, image_path)
         VALUES (?, ?, ?)
     ''', (name, student_number, image_path))
+
+    # Son eklenen öğrencinin ID'sini al
+    student_id = cursor.lastrowid
+
+    # Attendance tablosuna "present" kaydı ekle
+    mark_attendance(student_id, status="present")
+
     connection.commit()
     connection.close()
+
 
 # Öğrenci bilgilerini getirme fonksiyonu
 def get_student(student_id):
@@ -46,6 +54,22 @@ def get_attendance_history():
 
     # Yoklama geçmişini daha anlamlı bir formatta döndür
     return [{"id": record[0], "student_id": record[1], "status": record[2], "timestamp": record[3]} for record in history]
+
+def update_student_image(student_id, image_path):
+    connection = sqlite3.connect("data/students.db")
+    cursor = connection.cursor()
+    cursor.execute('''
+        UPDATE students
+        SET image_path = ?
+        WHERE id = ?
+    ''', (image_path, student_id))
+
+    # Attendance tablosuna "present" kaydı ekle
+    mark_attendance(student_id, status="present")
+
+    connection.commit()
+    connection.close()
+
 
 # Yoklama kaydını ekleme fonksiyonu
 def mark_attendance(student_id, status):
