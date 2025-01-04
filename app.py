@@ -184,4 +184,4 @@ def load_known_faces_and_names():
     return known_encodings, known_students
 
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0", port=5000)
+    app.run(debug=True, host="0.0.0.0", port=5001)
