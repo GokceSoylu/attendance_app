@@ -17,32 +17,32 @@
     <!-- <button onclick="updateAttendance('{{ student.id }}', 'mark-absent')">Yok Yaz</button> -->
     <button onclick="goBack()">Geri</button>
     <script>
-        // function updateAttendance(studentId, action) {
-        //     fetch(`/update-attendance/${studentId}/${action}`, {
-        //         method: "POST",
-        //         headers: {
-        //             "Content-Type": "application/json"
-        //         },
-        //     })
-        //         .then(response => {
-        //             if (!response.ok) {
-        //                 throw new Error("Sunucu hatası: " + response.status);
-        //             }
-        //             return response.json();
-        //         })
-        //         .then(data => {
-        //             if (data.status === "success") {
-        //                 alert("Yoklama durumu başarıyla güncellendi: " + data.updated_status);
-        //                 window.location.reload();
-        //             } else {
-        //                 alert("Hata: " + data.message);
-        //             }
-        //         })
-        //         .catch(error => {
-        //             console.error("Hata:", error);
-        //             alert("Sunucuya bağlanırken bir hata oluştu.");
-        //         });
-        // }
+        function updateAttendance(studentId, action) {
+            fetch(`/update-attendance/${studentId}/${action}`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error("Sunucu hatası: " + response.status);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.status === "success") {
+                        alert("Yoklama durumu başarıyla güncellendi: " + data.updated_status);
+                        window.location.reload();
+                    } else {
+                        alert("Hata: " + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error("Hata:", error);
+                    alert("Sunucuya bağlanırken bir hata oluştu.");
+                });
+        }
 
 
 

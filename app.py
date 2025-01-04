@@ -120,6 +120,33 @@ def student_detail_json(student_id):
 
     return jsonify({"status": "success", "student": dict(student)})
 
+@app.route("/student/<int:student_id>")
+def student_detail_absent(student_id):
+    connection = get_db_connection()
+    cursor = connection.cursor()
+    cursor.execute("SELECT * FROM students WHERE id = ?", (student_id,))
+    student = cursor.fetchone()
+    connection.close()
+
+    if not student:
+        return jsonify({"status": "error", "message": "Öğrenci bulunamadı"}), 404
+
+    return render_template("student_detail.html", student=dict(student))
+
+@app.route("/student/<int:student_id>/json")
+def student_detail_absent_json(student_id):
+    connection = get_db_connection()
+    cursor = connection.cursor()
+    cursor.execute("SELECT * FROM students WHERE id = ?", (student_id,))
+    student = cursor.fetchone()
+    connection.close()
+
+    if not student:
+        return jsonify({"status": "error", "message": "Öğrenci bulunamadı"}), 404
+
+    return jsonify({"status": "success", "student": dict(student)})
+
+
 def process_image(image_path):
     known_encodings, known_students = load_known_faces_and_names()
     test_image = cv2.imread(image_path)
@@ -184,4 +211,4 @@ def load_known_faces_and_names():
     return known_encodings, known_students
 
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0", port=5000)
+    app.run(debug=True, host="0.0.0.0", port=5001)
