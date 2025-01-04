@@ -1,92 +1,97 @@
 import sqlite3
 from datetime import datetime
 
+
+# Veritabanı bağlantısını sağlayan yardımcı fonksiyon
+def get_connection():
+    return sqlite3.connect("data/students.db")
+
+
 # Öğrenci ekleme fonksiyonu
 def add_student(name, student_number, image_path):
-    connection = sqlite3.connect("data/students.db")
-    cursor = connection.cursor()
-    cursor.execute('''
-        INSERT INTO students (name, student_number, image_path)
-        VALUES (?, ?, ?)
-    ''', (name, student_number, image_path))
-
-    # Son eklenen öğrencinin ID'sini al
-    student_id = cursor.lastrowid
-
-    # Attendance tablosuna "present" kaydı ekle
-    mark_attendance(student_id, status="present")
-
-    connection.commit()
-    connection.close()
+    try:
+        with get_connection() as connection:
+            cursor = connection.cursor()
+            cursor.execute('''
+                INSERT INTO students (name, student_number, image_path)
+                VALUES (?, ?, ?)
+            ''', (name, student_number, image_path))
+            
+            student_id = cursor.lastrowid  # Son eklenen öğrencinin ID'si
+            mark_attendance(student_id, "present")  # Varsayılan yoklama durumu
+        print(f"Öğrenci başarıyla eklendi: {name}")
+    except Exception as e:
+        print(f"Öğrenci eklerken hata oluştu: {e}")
 
 
-# Öğrenci bilgilerini getirme fonksiyonu
+# Tek bir öğrencinin bilgilerini alma
 def get_student(student_id):
-    connection = sqlite3.connect("data/students.db")
-    connection.row_factory = sqlite3.Row  # Row nesnelerini sözlük gibi almak için
-    cursor = connection.cursor()
-    cursor.execute("SELECT * FROM students WHERE id=?", (student_id,))
-    student = cursor.fetchone()
-    connection.close()
+    try:
+        with get_connection() as connection:
+            connection.row_factory = sqlite3.Row
+            cursor = connection.cursor()
+            cursor.execute("SELECT * FROM students WHERE id=?", (student_id,))
+            student = cursor.fetchone()
+            return dict(student) if student else None
+    except Exception as e:
+        print(f"Öğrenci bilgileri alınırken hata oluştu: {e}")
+        return None
 
-    # Eğer öğrenci bulunduysa, tuple'ı bir sözlüğe çeviriyoruz
-    if student:
-        return dict(student)  # Row nesnesini dict'e dönüştürüyoruz
-    return None
 
-# Tüm öğrencileri getirme fonksiyonu
+# Tüm öğrencileri listeleme
 def get_all_students():
-    connection = sqlite3.connect("data/students.db")
-    connection.row_factory = sqlite3.Row  # Row nesnelerini sözlük gibi almak için
-    cursor = connection.cursor()
-    cursor.execute("SELECT * FROM students")
-    students = cursor.fetchall()
-    connection.close()
+    try:
+        with get_connection() as connection:
+            connection.row_factory = sqlite3.Row
+            cursor = connection.cursor()
+            cursor.execute("SELECT * FROM students")
+            students = cursor.fetchall()
+            return [dict(student) for student in students]
+    except Exception as e:
+        print(f"Tüm öğrenciler alınırken hata oluştu: {e}")
+        return []
 
-    # Row nesnelerini dict'e dönüştürme
-    return [dict(student) for student in students]
 
-
-# Öğrencilerin yoklama geçmişini getirme fonksiyonu
+# Yoklama geçmişini alma
 def get_attendance_history():
-    connection = sqlite3.connect("data/students.db")
-    cursor = connection.cursor()
-    cursor.execute("SELECT * FROM attendance")
-    history = cursor.fetchall()
-    connection.close()
+    try:
+        with get_connection() as connection:
+            cursor = connection.cursor()
+            cursor.execute("SELECT * FROM attendance")
+            history = cursor.fetchall()
+            return [
+                {"id": record[0], "student_id": record[1], "status": record[2], "timestamp": record[3]}
+                for record in history
+            ]
+    except Exception as e:
+        print(f"Yoklama geçmişi alınırken hata oluştu: {e}")
+        return []
 
-    # Yoklama geçmişini daha anlamlı bir formatta döndür
-    return [{"id": record[0], "student_id": record[1], "status": record[2], "timestamp": record[3]} for record in history]
 
+# Öğrenci resmi güncelleme
 def update_student_image(student_id, image_path):
-    connection = sqlite3.connect("data/students.db")
-    cursor = connection.cursor()
-    cursor.execute('''
-        UPDATE students
-        SET image_path = ?
-        WHERE id = ?
-    ''', (image_path, student_id))
-
-    # Attendance tablosuna "present" kaydı ekle
-    mark_attendance(student_id, status="present")
-
-    connection.commit()
-    connection.close()
+    try:
+        with get_connection() as connection:
+            cursor = connection.cursor()
+            cursor.execute('''
+                UPDATE students
+                SET image_path = ?
+                WHERE id = ?
+            ''', (image_path, student_id))
+        print(f"Öğrenci resmi başarıyla güncellendi: ID {student_id}")
+    except Exception as e:
+        print(f"Öğrenci resmi güncellenirken hata oluştu: {e}")
 
 
+# Yoklama kaydı ekleme
 def mark_attendance(student_id, status):
     try:
-        connection = sqlite3.connect("data/students.db")
-        cursor = connection.cursor()
-        cursor.execute('''
-            INSERT INTO attendance (student_id, status, timestamp)
-            VALUES (?, ?, ?)
-        ''', (student_id, status, datetime.now()))
-        
-        connection.commit()  # Değişiklikleri kaydet
-        connection.close()
-        print(f"Yoklama kaydı başarıyla eklendi: Öğrenci ID: {student_id}, Durum: {status}")
+        with get_connection() as connection:
+            cursor = connection.cursor()
+            cursor.execute('''
+                INSERT INTO attendance (student_id, status, timestamp)
+                VALUES (?, ?, ?)
+            ''', (student_id, status, datetime.now()))
+        print(f"Yoklama kaydı başarıyla eklendi: Öğrenci ID {student_id}, Durum: {status}")
     except Exception as e:
         print(f"Yoklama kaydı eklerken hata oluştu: {e}")
-
-
