@@ -1,40 +1,37 @@
 import sqlite3
 import cv2
 import face_recognition
-from flask import Flask, render_template, request, redirect, jsonify, url_for
-from utils.db_utils import get_all_students, get_student, add_student, mark_attendance, get_attendance_history
-import os
-from datetime import datetime
-from flask import session
-import json
-
-from flask import Flask, request
+from flask import Flask, render_template, request, redirect, jsonify, url_for, session
 from flask_cors import CORS
+import os
+import json
+from datetime import datetime
 
+# Flask uygulaması tanımı
 app = Flask(__name__)
 CORS(app)
-app.secret_key = "bu-cok-gizli-bir-anahtardir" #ernflskjbnfrlkjsef çok komik
-
+app.secret_key = "bu-cok-gizli-bir-anahtardir"
 
 UPLOAD_FOLDER = "static/images/uploads"
 KNOWN_FACES_DIR = "static/images/known_faces"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-
-@app.route("/")
-def index():
-    return render_template("index.html")
-
-from flask import session
-
-import json
-import sqlite3
+os.makedirs(KNOWN_FACES_DIR, exist_ok=True)
 
 # JSON dönüştürme için özel bir fonksiyon
 def custom_json_converter(obj):
     if isinstance(obj, sqlite3.Row):
-        return dict(obj)  # Row nesnesini dict'e dönüştür
-    # Diğer özel nesneler burada ele alınabilir
+        return dict(obj)
     raise TypeError("Type not serializable")
+
+# Veritabanı bağlantı fonksiyonu
+def get_db_connection():
+    connection = sqlite3.connect("data/students.db")
+    connection.row_factory = sqlite3.Row
+    return connection
+
+@app.route("/")
+def index():
+    return render_template("index.html")
 
 @app.route("/upload", methods=["POST"])
 def upload_image():
@@ -43,146 +40,19 @@ def upload_image():
         file_path = os.path.join(UPLOAD_FOLDER, file.filename)
         file.save(file_path)
 
-        # Resmi işleyip sonuçları al
         results = process_image(file_path)
-
-        # 'results' içindeki nesneleri JSON formatına dönüştür
         session["results"] = json.dumps(results, default=custom_json_converter)
 
-        # Yönlendirme ile gösterim
         return redirect(url_for("show_result"))
 
     return redirect(url_for("index"))
 
-
-
-@app.route('/show_result')
+@app.route("/show_result")
 def show_result():
     results = session.get("results")
     if results:
-        # JSON verisini tekrar bir python veri yapısına dönüştürme
         results = json.loads(results)
     return render_template("result.html", results=results)
-
-
-def show_result():
-    connection = sqlite3.connect("data/students.db")
-    connection.row_factory = sqlite3.Row
-    cursor = connection.cursor()
-    cursor.execute("SELECT * FROM students")
-    rows = cursor.fetchall()
-    connection.close()
-
-    return [dict(row) for row in rows]
-
-
-def get_student(student_id):
-    connection = sqlite3.connect("data/students.db")
-    connection.row_factory = sqlite3.Row  # Sözlük benzeri sonuç döndür
-    cursor = connection.cursor()
-    cursor.execute("SELECT * FROM students WHERE id=?", (student_id,))
-    row = cursor.fetchone()
-    connection.close()
-
-    return dict(row) if row else None
-
-# @app.route('/update-attendance/<int:student_id>/<action>', methods=['POST'])
-# def update_attendance(student_id, action):
-#     try:
-#         connection = sqlite3.connect("data/students.db")
-#         cursor = connection.cursor()
-
-#         # Geçerli işlem türünü belirleme
-#         if action == "mark-present":
-#             new_status = "present"
-#         elif action == "mark-absent":
-#             new_status = "absent"
-#         else:
-#             return jsonify({"status": "error", "message": "Geçersiz işlem"}), 400
-
-#         # Attendance tablosuna güncelleme yapma
-#         cursor.execute(
-#             """
-#             UPDATE attendance
-#             SET status = ?
-#             WHERE student_id = ?
-#             """,
-#             (new_status, student_id)
-#         )
-
-#         # Veritabanındaki değişikliklerin kaydedilmesi
-#         connection.commit()
-
-#         # Kontrol etmek için yapılan güncellemenin başarılı olup olmadığını kontrol etme
-#         cursor.execute(
-#             """
-#             SELECT status FROM attendance WHERE student_id = ?
-#             """, (student_id,)
-#         )
-#         updated_status = cursor.fetchone()
-
-#         # Eğer güncellenmişse, sonucu döndür
-#         if updated_status:
-#             connection.close()
-#             return jsonify({"status": "success", "updated_status": updated_status[0]})
-
-#         connection.close()
-#         return jsonify({"status": "error", "message": "Güncellenemedi."}), 500
-
-#     except Exception as e:
-#         connection.rollback()
-#         connection.close()
-#         return jsonify({"status": "error", "message": str(e)}), 500
-
-
-@app.route("/student/<int:student_id>")
-def student_detail(student_id):
-    student = get_student(student_id)
-    if not student:
-        return jsonify({"status": "error", "message": "Öğrenci bulunamadı"}), 404
-
-    # HTML Şablonuna JSON verisi ile birlikte gönder
-    return render_template("student_detail.html", student=student)
-
-@app.route("/student/<int:student_id>/json")
-def student_detail_json(student_id):
-    student = get_student(student_id)
-    if not student:
-        return jsonify({"status": "error", "message": "Öğrenci bulunamadı"}), 404
-
-    return jsonify({"status": "success", "student": student})
-
-
-@app.route("/student/absent/<int:student_id>")
-def student_detail_absent(student_id):
-    student = get_student(student_id)
-    if not student:
-        return jsonify({"status": "error", "message": "Öğrenci bulunamadı"}), 404
-
-    # HTML Şablonuna öğrenci verisini gönder
-    return render_template("student_detail_absent.html", student=student)
-
-@app.route("/student/absent/<int:student_id>/json")
-def student_detail_absent_json(student_id):
-    student = get_student(student_id)
-    if not student:
-        return jsonify({"status": "error", "message": "Öğrenci bulunamadı"}), 404
-
-    return jsonify({"status": "success", "student": student})
-
-
-def check_attendance_status(student_id):
-    """Öğrencinin yoklama durumunu kontrol eder."""
-    connection = sqlite3.connect("data/students.db")
-    cursor = connection.cursor()
-    cursor.execute("SELECT status FROM attendance WHERE student_id = ?", (student_id,))
-    result = cursor.fetchone()
-    connection.close()
-
-    if result and result[0] == "absent":
-        return "absent"
-    return "present"
-
 
 @app.route("/add-student", methods=["GET", "POST"])
 def add_student_page():
@@ -197,19 +67,58 @@ def add_student_page():
         file_path = os.path.join(KNOWN_FACES_DIR, f"{name}.jpg")
         file.save(file_path)
 
-        add_student(name, student_number, file_path)
+        connection = get_db_connection()
+        cursor = connection.cursor()
+        cursor.execute("INSERT INTO students (name, student_number, image_path) VALUES (?, ?, ?)", (name, student_number, file_path))
+        connection.commit()
+        connection.close()
+
         return redirect(url_for("index"))
     return render_template("add_student.html")
 
-def get_all_students():
-    connection = sqlite3.connect("data/students.db")
-    connection.row_factory = sqlite3.Row  # Sözlük benzeri sonuç döndür
+@app.route("/update-attendance/<int:student_id>/<action>", methods=["POST"])
+def update_attendance(student_id, action):
+    connection = get_db_connection()
     cursor = connection.cursor()
-    cursor.execute("SELECT * FROM students")
-    students = cursor.fetchall()
-    connection.close()
-    return students
 
+    if action == "mark-present":
+        new_status = "present"
+    elif action == "mark-absent":
+        new_status = "absent"
+    else:
+        return jsonify({"status": "error", "message": "Geçersiz işlem"}), 400
+
+    cursor.execute("UPDATE attendance SET status = ? WHERE student_id = ?", (new_status, student_id))
+    connection.commit()
+    connection.close()
+
+    return jsonify({"status": "success", "updated_status": new_status})
+
+@app.route("/student/<int:student_id>")
+def student_detail(student_id):
+    connection = get_db_connection()
+    cursor = connection.cursor()
+    cursor.execute("SELECT * FROM students WHERE id = ?", (student_id,))
+    student = cursor.fetchone()
+    connection.close()
+
+    if not student:
+        return jsonify({"status": "error", "message": "Öğrenci bulunamadı"}), 404
+
+    return render_template("student_detail.html", student=dict(student))
+
+@app.route("/student/<int:student_id>/json")
+def student_detail_json(student_id):
+    connection = get_db_connection()
+    cursor = connection.cursor()
+    cursor.execute("SELECT * FROM students WHERE id = ?", (student_id,))
+    student = cursor.fetchone()
+    connection.close()
+
+    if not student:
+        return jsonify({"status": "error", "message": "Öğrenci bulunamadı"}), 404
+
+    return jsonify({"status": "success", "student": dict(student)})
 
 def process_image(image_path):
     known_encodings, known_students = load_known_faces_and_names()
@@ -222,7 +131,6 @@ def process_image(image_path):
     results = {"present": [], "absent": []}
     present_ids = []
 
-    # Yüz tanıma işlemi
     for face_encoding in face_encodings:
         matches = face_recognition.compare_faces(known_encodings, face_encoding)
         if True in matches:
@@ -230,35 +138,34 @@ def process_image(image_path):
             present_ids.append(known_students[matched_idx]['id'])
             results["present"].append(known_students[matched_idx])
 
-            # Yoklama tablosuna "present" durumu ekle
-            mark_attendance(known_students[matched_idx]['id'], status="present")
+            connection = get_db_connection()
+            cursor = connection.cursor()
+            cursor.execute("INSERT OR REPLACE INTO attendance (student_id, status) VALUES (?, ?)", (known_students[matched_idx]['id'], "present"))
+            connection.commit()
+            connection.close()
 
-    # Veritabanındaki tüm öğrencileri alın
-    all_students = get_all_students()
+    connection = get_db_connection()
+    cursor = connection.cursor()
+    cursor.execute("SELECT * FROM students")
+    all_students = cursor.fetchall()
+    connection.close()
 
-    # Sınıfta olmayanları belirle ve yoklama tablosuna "absent" durumu ekle
-    results["absent"] = []
     for student in all_students:
         if student["id"] not in present_ids:
             results["absent"].append(student)
-            mark_attendance(student["id"], status="absent")
-
-    # Önceki `results` dictionary'sini session'a kaydet
-    session["results"] = {
-        "present": [dict(row) for row in results["present"]],
-        "absent": [dict(row) for row in results["absent"]]
-    }
+            connection = get_db_connection()
+            cursor = connection.cursor()
+            cursor.execute("INSERT OR REPLACE INTO attendance (student_id, status) VALUES (?, ?)", (student["id"], "absent"))
+            connection.commit()
+            connection.close()
 
     return results
 
-
-
 def load_known_faces_and_names():
-    connection = sqlite3.connect("data/students.db")
-    connection.row_factory = sqlite3.Row  # Sözlük benzeri sonuç döndür
+    connection = get_db_connection()
     cursor = connection.cursor()
     cursor.execute("SELECT id, name, image_path FROM students")
-    students = cursor.fetchall()  # Artık sözlük gibi erişilebilir
+    students = cursor.fetchall()
     connection.close()
 
     known_encodings = []
@@ -276,6 +183,5 @@ def load_known_faces_and_names():
 
     return known_encodings, known_students
 
-
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, host="0.0.0.0", port=5000)
