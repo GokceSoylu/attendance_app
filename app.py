@@ -86,33 +86,53 @@ def get_student(student_id):
 
     return dict(row) if row else None
 
-@app.route('/update-attendance/<int:student_id>/<action>', methods=['POST'])
-def update_attendance(student_id, action):
-    connection = sqlite3.connect("data/attendance.db")  # `attendance` tablosu doğru dosyada olmalı
-    cursor = connection.cursor()
-    
-    if action == "mark-present":
-        new_status = "present"
-    elif action == "mark-absent":
-        new_status = "absent"
-    else:
-        return jsonify({"status": "error", "message": "Geçersiz işlem"}), 400
-    
-    cursor.execute(
-        """
-        UPDATE attendance
-        SET status = ?
-        WHERE student_id = ?
-        """,
-        (new_status, student_id)
-    )
-    connection.commit()
-    connection.close()
-    return jsonify({"status": "success", "updated_status": new_status})
+# @app.route('/update-attendance/<int:student_id>/<action>', methods=['POST'])
+# def update_attendance(student_id, action):
+#     try:
+#         connection = sqlite3.connect("data/students.db")
+#         cursor = connection.cursor()
 
+#         # Geçerli işlem türünü belirleme
+#         if action == "mark-present":
+#             new_status = "present"
+#         elif action == "mark-absent":
+#             new_status = "absent"
+#         else:
+#             return jsonify({"status": "error", "message": "Geçersiz işlem"}), 400
 
+#         # Attendance tablosuna güncelleme yapma
+#         cursor.execute(
+#             """
+#             UPDATE attendance
+#             SET status = ?
+#             WHERE student_id = ?
+#             """,
+#             (new_status, student_id)
+#         )
 
+#         # Veritabanındaki değişikliklerin kaydedilmesi
+#         connection.commit()
 
+#         # Kontrol etmek için yapılan güncellemenin başarılı olup olmadığını kontrol etme
+#         cursor.execute(
+#             """
+#             SELECT status FROM attendance WHERE student_id = ?
+#             """, (student_id,)
+#         )
+#         updated_status = cursor.fetchone()
+
+#         # Eğer güncellenmişse, sonucu döndür
+#         if updated_status:
+#             connection.close()
+#             return jsonify({"status": "success", "updated_status": updated_status[0]})
+
+#         connection.close()
+#         return jsonify({"status": "error", "message": "Güncellenemedi."}), 500
+
+#     except Exception as e:
+#         connection.rollback()
+#         connection.close()
+#         return jsonify({"status": "error", "message": str(e)}), 500
 
 
 @app.route("/student/<int:student_id>")
