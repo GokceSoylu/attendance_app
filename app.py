@@ -5,7 +5,6 @@ from flask import Flask, render_template, request, redirect, jsonify, url_for, s
 from flask_cors import CORS
 import os
 import json
-from datetime import datetime
 
 # Flask uygulaması tanımı
 app = Flask(__name__)
@@ -28,6 +27,14 @@ def get_db_connection():
     connection = sqlite3.connect("data/students.db")
     connection.row_factory = sqlite3.Row
     return connection
+
+# Veritabanından öğrenci bilgilerini getirme fonksiyonu
+def get_student(student_id):
+    with get_db_connection() as connection:
+        cursor = connection.cursor()
+        cursor.execute("SELECT * FROM students WHERE id = ?", (student_id,))
+        row = cursor.fetchone()
+        return dict(row) if row else None
 
 @app.route("/")
 def index():
@@ -54,6 +61,22 @@ def show_result():
         results = json.loads(results)
     return render_template("result.html", results=results)
 
+@app.route("/student/<int:student_id>")
+def student_detail(student_id):
+    student = get_student(student_id)
+    if not student:
+        return jsonify({"status": "error", "message": "\u00d6\u011frenci bulunamad\u0131"}), 404
+
+    return render_template("student_detail.html", student=student)
+
+@app.route("/student/<int:student_id>/json")
+def student_detail_json(student_id):
+    student = get_student(student_id)
+    if not student:
+        return jsonify({"status": "error", "message": "\u00d6\u011frenci bulunamad\u0131"}), 404
+
+    return jsonify({"status": "success", "student": student})
+
 @app.route("/add-student", methods=["GET", "POST"])
 def add_student_page():
     if request.method == "POST":
@@ -62,63 +85,31 @@ def add_student_page():
         file = request.files["image"]
 
         if not file or not file.filename.lower().endswith((".jpg", ".jpeg", ".png")):
-            return render_template("add_student.html", error="Geçerli bir resim dosyası yükleyin.")
+            return render_template("add_student.html", error="Ge\u00e7erli bir resim dosyas\u0131 y\u00fckleyin.")
 
         file_path = os.path.join(KNOWN_FACES_DIR, f"{name}.jpg")
         file.save(file_path)
 
-        connection = get_db_connection()
-        cursor = connection.cursor()
-        cursor.execute("INSERT INTO students (name, student_number, image_path) VALUES (?, ?, ?)", (name, student_number, file_path))
-        connection.commit()
-        connection.close()
+        with get_db_connection() as connection:
+            cursor = connection.cursor()
+            cursor.execute("INSERT INTO students (name, student_number, image_path) VALUES (?, ?, ?)", (name, student_number, file_path))
+            connection.commit()
 
         return redirect(url_for("index"))
     return render_template("add_student.html")
 
 @app.route("/update-attendance/<int:student_id>/<action>", methods=["POST"])
 def update_attendance(student_id, action):
-    connection = get_db_connection()
-    cursor = connection.cursor()
+    new_status = "present" if action == "mark-present" else "absent" if action == "mark-absent" else None
+    if not new_status:
+        return jsonify({"status": "error", "message": "Ge\u00e7ersiz i\u015flem"}), 400
 
-    if action == "mark-present":
-        new_status = "present"
-    elif action == "mark-absent":
-        new_status = "absent"
-    else:
-        return jsonify({"status": "error", "message": "Geçersiz işlem"}), 400
-
-    cursor.execute("UPDATE attendance SET status = ? WHERE student_id = ?", (new_status, student_id))
-    connection.commit()
-    connection.close()
+    with get_db_connection() as connection:
+        cursor = connection.cursor()
+        cursor.execute("INSERT OR REPLACE INTO attendance (student_id, status) VALUES (?, ?)", (student_id, new_status))
+        connection.commit()
 
     return jsonify({"status": "success", "updated_status": new_status})
-
-@app.route("/student/<int:student_id>")
-def student_detail(student_id):
-    connection = get_db_connection()
-    cursor = connection.cursor()
-    cursor.execute("SELECT * FROM students WHERE id = ?", (student_id,))
-    student = cursor.fetchone()
-    connection.close()
-
-    if not student:
-        return jsonify({"status": "error", "message": "Öğrenci bulunamadı"}), 404
-
-    return render_template("student_detail.html", student=dict(student))
-
-@app.route("/student/<int:student_id>/json")
-def student_detail_json(student_id):
-    connection = get_db_connection()
-    cursor = connection.cursor()
-    cursor.execute("SELECT * FROM students WHERE id = ?", (student_id,))
-    student = cursor.fetchone()
-    connection.close()
-
-    if not student:
-        return jsonify({"status": "error", "message": "Öğrenci bulunamadı"}), 404
-
-    return jsonify({"status": "success", "student": dict(student)})
 
 def process_image(image_path):
     known_encodings, known_students = load_known_faces_and_names()
@@ -138,48 +129,41 @@ def process_image(image_path):
             present_ids.append(known_students[matched_idx]['id'])
             results["present"].append(known_students[matched_idx])
 
-            connection = get_db_connection()
-            cursor = connection.cursor()
-            cursor.execute("INSERT OR REPLACE INTO attendance (student_id, status) VALUES (?, ?)", (known_students[matched_idx]['id'], "present"))
-            connection.commit()
-            connection.close()
+            with get_db_connection() as connection:
+                cursor = connection.cursor()
+                cursor.execute("INSERT OR REPLACE INTO attendance (student_id, status) VALUES (?, ?)", (known_students[matched_idx]['id'], "present"))
+                connection.commit()
 
-    connection = get_db_connection()
-    cursor = connection.cursor()
-    cursor.execute("SELECT * FROM students")
-    all_students = cursor.fetchall()
-    connection.close()
+    with get_db_connection() as connection:
+        cursor = connection.cursor()
+        cursor.execute("SELECT * FROM students")
+        all_students = cursor.fetchall()
 
     for student in all_students:
         if student["id"] not in present_ids:
             results["absent"].append(student)
-            connection = get_db_connection()
-            cursor = connection.cursor()
-            cursor.execute("INSERT OR REPLACE INTO attendance (student_id, status) VALUES (?, ?)", (student["id"], "absent"))
-            connection.commit()
-            connection.close()
+            with get_db_connection() as connection:
+                cursor = connection.cursor()
+                cursor.execute("INSERT OR REPLACE INTO attendance (student_id, status) VALUES (?, ?)", (student["id"], "absent"))
+                connection.commit()
 
     return results
 
 def load_known_faces_and_names():
-    connection = get_db_connection()
-    cursor = connection.cursor()
-    cursor.execute("SELECT id, name, image_path FROM students")
-    students = cursor.fetchall()
-    connection.close()
+    with get_db_connection() as connection:
+        cursor = connection.cursor()
+        cursor.execute("SELECT id, name, image_path FROM students")
+        students = cursor.fetchall()
 
     known_encodings = []
     known_students = []
 
     for student in students:
-        student_id = student['id']
-        name = student['name']
-        image_path = student['image_path']
-        image = face_recognition.load_image_file(image_path)
+        image = face_recognition.load_image_file(student['image_path'])
         encoding = face_recognition.face_encodings(image)
         if encoding:
             known_encodings.append(encoding[0])
-            known_students.append({"id": student_id, "name": name, "image_path": image_path})
+            known_students.append({"id": student['id'], "name": student['name'], "image_path": student['image_path']})
 
     return known_encodings, known_students
 
