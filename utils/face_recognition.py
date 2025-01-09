@@ -82,17 +82,17 @@ def main():
         if name != "Bilinmeyen":
             mark_attendance(name, attendance_file_path, attendance_list)
 
-        # Yüzlerin üzerine etiket ekleme
-        top, right, bottom, left = [int(coord / 1.5) for coord in face_location]
-        color = (0, 255, 0) if name != "Bilinmeyen" else (0, 0, 255)
-        cv2.rectangle(test_image, (left, top), (right, bottom), color, 2)
-        cv2.putText(test_image, name, (left, top - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
+    #     # Yüzlerin üzerine etiket ekleme
+    #     top, right, bottom, left = [int(coord / 1.5) for coord in face_location]
+    #     color = (0, 255, 0) if name != "Bilinmeyen" else (0, 0, 255)
+    #     cv2.rectangle(test_image, (left, top), (right, bottom), color, 2)
+    #     cv2.putText(test_image, name, (left, top - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
 
-    # İşlenmiş görüntüyü gösterme
-    test_image_bgr = cv2.cvtColor(test_image, cv2.COLOR_BGR2RGB)
-    plt.imshow(test_image_bgr)
-    plt.axis("off")
-    plt.show()
+    # # İşlenmiş görüntüyü gösterme
+    # test_image_bgr = cv2.cvtColor(test_image, cv2.COLOR_BGR2RGB)
+    # plt.imshow(test_image_bgr)
+    # plt.axis("off")
+    # plt.show()
 
 
 if __name__ == "__main__":
