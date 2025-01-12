@@ -1,5 +1,5 @@
 # attendance_app
-napıyorum ben de bilmiyorum
+
 
 attendance_app/
 ├── app.py                 # Flask uygulaması
